@@ -11,9 +11,8 @@ public class ToolboxBelt : ToolboxItem {
 	public float AnimationDuration = 0.4f;
 	public AnimationCurve animationCurve = AnimationCurve.EaseInOut (0f, 0f, 1f, 1f);
 
-	private bool isExpanding = false;
-	private bool isShrinking = false;
-	private float animationStartTime = 0f;
+	private int animationDirection = 0;
+	private float animationProgress = 1f;
 
 	public ToolboxItem[] itemsCahche;
 	AnimatedHorizontalOrVerticalLayoutGroup layout;
@@ -29,28 +28,16 @@ public class ToolboxBelt : ToolboxItem {
 	 
 
 	void Update() {
-		if (isExpanding) {
-			if (Time.time - animationStartTime > AnimationDuration) {
-				isExpanding = false;
-				Animate (1);
-				StartCoroutine (RebuildLayoutInNextFrame ());
-			} else {
-				float animationProgress = Mathf.Clamp01((Time.time - animationStartTime) / AnimationDuration);
-				animationProgress = animationCurve.Evaluate (animationProgress);
-				Animate (animationProgress);
-			}
+		if (animationDirection != 0) {
+			animationProgress += Time.deltaTime / AnimationDuration * animationDirection;
+			float progress = Mathf.Clamp01(animationProgress);
+			progress = animationCurve.Evaluate (progress);
+			Animate (progress);
 
-		} else if (isShrinking) {
-			if (Time.time - animationStartTime > AnimationDuration) {
-				isShrinking = false;
-				Animate (0);
+			if ((animationProgress > 1f && animationDirection == 1) || (animationProgress < 0f  && animationDirection == -1)) {
+				animationDirection = 0;
 				StartCoroutine (RebuildLayoutInNextFrame ());
-			} else {
-				float animationProgress = Mathf.Clamp01((Time.time - animationStartTime) / AnimationDuration);
-				animationProgress = 1f - animationProgress;
-				animationProgress = animationCurve.Evaluate (animationProgress);
-				Animate (animationProgress);
-			}
+			} 
 		}
 	}
 		
@@ -82,9 +69,7 @@ public class ToolboxBelt : ToolboxItem {
 			return;
 		itemsCahche =  GetComponentsInChildrenFirstLevel<ToolboxItem> ();
 		IsExpanded = true;
-		isExpanding = true;
-		isShrinking = false;
-		animationStartTime = Time.time;
+		animationDirection = 1;
 		if(recurrsive) {
 			for (int i = 0; i < itemsCahche.Length; i++) {
 				if(itemsCahche [i].GetType() == typeof(ToolboxBelt)) {
@@ -100,9 +85,7 @@ public class ToolboxBelt : ToolboxItem {
 			return;
 		itemsCahche =  GetComponentsInChildrenFirstLevel<ToolboxItem> ();
 		IsExpanded = false;
-		isExpanding = false;
-		isShrinking = true;
-		animationStartTime = Time.time;
+		animationDirection = -1;
 		if(recurrsive) {
 			for (int i = 0; i < itemsCahche.Length; i++) {
 				if(itemsCahche [i].GetType() == typeof(ToolboxBelt)) {
@@ -127,13 +110,12 @@ public class ToolboxBelt : ToolboxItem {
 		}
 	}
 
-	public T[] GetComponentsInChildrenFirstLevel<T> ()
+	public T[] GetComponentsInChildrenFirstLevel<T> (bool includeInactive = true)
 	{
-		//return GetComponentsInChildren<T> ();
 		List<T> res = new List<T> ();
-		T[] childs =  GetComponentsInChildren<T> (true);
+		T[] childs =  GetComponentsInChildren<T> (includeInactive);
 		for (int i = 0; i < childs.Length; i++) {
-			if(((MonoBehaviour)(object)childs[i]).transform.parent == transform) {
+			if(((Component)(object)childs[i]).transform.parent == transform) {
 				res.Add (childs [i]);
 			}
 		}
