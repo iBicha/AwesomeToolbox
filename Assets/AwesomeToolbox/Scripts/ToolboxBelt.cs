@@ -24,9 +24,6 @@ public class ToolboxBelt : ToolboxItem {
 			layout = GetComponent<AnimatedVerticalLayoutGroup> ();
 		}
 		itemsCahche =  GetComponentsInChildrenFirstLevel<ToolboxItem> ();
-
-		animationDirection = IsExpanded ? 1 : -1;
-		animationProgress = IsExpanded ? 1f : 0f;
 	}
 	 
 
