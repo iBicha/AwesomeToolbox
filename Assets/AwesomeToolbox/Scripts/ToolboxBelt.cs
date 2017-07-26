@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[ExecuteInEditMode]
 [RequireComponent(typeof(AnimatedHorizontalOrVerticalLayoutGroup))]
 public class ToolboxBelt : ToolboxItem {
 	public bool IsExpanded = true;
